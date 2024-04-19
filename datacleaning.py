@@ -14,10 +14,10 @@ import pandas as pd
 # ar_data['clean_instructions'] = ar_data['clean_instructions'].replace(r'\n', ' ', regex=True)
 # ar_data['clean_instructions'] = ar_data['clean_instructions'].str.lower()
 
-# def masktext(text, mask):
-#     mask_list = mask.split()
-#     masked_words = [word for word in text.split() if word not in mask_list]
-#     return " ".join(masked_words)
+def masktext(text, mask):
+    mask_list = mask.split()
+    masked_words = [word for word in text.split() if word not in mask_list]
+    return " ".join(masked_words)
 
 # ar_data['clean_instructions_masked'] = ar_data.apply(lambda l: masktext(l['clean_instructions'], l['clean_ingredients']), axis=1)
 

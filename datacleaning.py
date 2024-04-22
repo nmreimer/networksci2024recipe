@@ -40,3 +40,11 @@ def clean_recipedata(filename: str):
     data['clean_instructions_masked'] = data.apply(lambda l: masktext(l['clean_instructions'], l['clean_ingredients']), axis=1)
 
     return data
+
+from ast import literal_eval
+
+def data_for_nodes(nodes: set):
+    data = pd.read_csv("data_small.csv", converters={"ingredient_words": literal_eval,"instruction_words": literal_eval})
+    data = data.rename(columns={"Unnamed: 0":"Id"})
+    output = pd.DataFrame([rec for rec in nodes]).rename(columns={0: "Id"}).set_index('Id').join(data.set_index('Id'))
+    return output

@@ -1,18 +1,10 @@
 import re
 import pandas as pd
+from nltk.corpus import stopwords
 
-# ar_data = pd.read_json("recipes_raw_nosource_ar.json")
-# ar_data = ar_data.T
-# ar_data.dropna(inplace=True)
-# ar_data['ingredients'] = ar_data['ingredients'].apply(lambda L: " ".join(L))
-
-# ar_data['clean_ingredients'] = ar_data['ingredients'].replace(r'[^a-zA-Z\s]', '', regex=True)
-# ar_data['clean_ingredients'] = ar_data['clean_ingredients'].replace('ADVERTISEMENT', '', regex=True)
-# ar_data['clean_ingredients'] = ar_data['clean_ingredients'].str.lower()
-
-# ar_data['clean_instructions'] = ar_data['instructions'].replace(r'[^a-zA-Z\s]', '', regex=True)
-# ar_data['clean_instructions'] = ar_data['clean_instructions'].replace(r'\n', ' ', regex=True)
-# ar_data['clean_instructions'] = ar_data['clean_instructions'].str.lower()
+ingredient_units = {'inch', 'ml', 'milliliter','milliliters','liters','teaspoons', 'l','liter','teaspoon','t','tsp','tablespoon','tablespoons','tbl','tbs','tbsp','ounce','oz','fl','cup','cups','c','pint','pints','pt','p','quart','quarts','qt','gal','gals','gallon','gallons','g','mg','milligram','milligrams','gram','grams','pound','pounds','lb','lbs','c','f'}
+stop_words = set(stopwords.words("english"))
+stop_words = stop_words.union(ingredient_units)
 
 def masktext(text, mask):
     mask_list = mask.split()
@@ -23,10 +15,11 @@ def masktext(text, mask):
 
 
 
-def clean_recipedata(filename: str): 
+def clean_recipedata(filename: str, n = 5000): 
     data = pd.read_json(filename)
     data = data.T
     data.dropna(inplace=True)
+    data = data.sample(n=n, random_state=2024)
     data['ingredients'] = data['ingredients'].apply(lambda L: " ".join(L))
 
     data['clean_ingredients'] = data['ingredients'].replace(r'[^a-zA-Z\s]', '', regex=True)
@@ -37,9 +30,33 @@ def clean_recipedata(filename: str):
     data['clean_instructions'] = data['clean_instructions'].replace(r'\n', ' ', regex=True)
     data['clean_instructions'] = data['clean_instructions'].str.lower()
 
+    data['clean_instructions'] = data.apply(lambda l: masktext(l['clean_instructions'], " ".join(stop_words)), axis=1)
+    data['clean_ingredients'] = data.apply(lambda l: masktext(l['clean_ingredients'], " ".join(stop_words)), axis=1)
+
+    data['clean_instructions'] = data.apply(lambda l: masktext(l['clean_instructions'], l['title']), axis=1)
+    data['clean_ingredients'] = data.apply(lambda l: masktext(l['clean_ingredients'], l['title']), axis=1)
+
     data['clean_instructions_masked'] = data.apply(lambda l: masktext(l['clean_instructions'], l['clean_ingredients']), axis=1)
 
     return data
+
+
+
+
+def filter_stop_words(words):
+    output = list()
+    for word in words:
+        if word.casefold() not in stop_words:
+            output.append(word)
+    return(output)
+
+# data["instruction_words"] = data["instruction_words"].apply(filter_stop_words)
+# data["ingredient_words"] = data["ingredient_words"].apply(filter_stop_words)
+# data['index'] = data.index
+# data.to_csv("data_small.csv")
+
+
+
 
 from ast import literal_eval
 

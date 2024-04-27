@@ -38,6 +38,10 @@ def clean_recipedata(filename: str, n = 5000):
 
     data['clean_instructions_masked'] = data.apply(lambda l: masktext(l['clean_instructions'], l['clean_ingredients']), axis=1)
 
+    data['title_words'] = data['title'].replace(r'[^a-zA-Z\s]', '', regex=True)
+    data['title_words'] = data['title_words'].str.lower()
+    data['title_words'] = data['title_words'].str.split()
+
     return data
 
 
@@ -61,7 +65,7 @@ def filter_stop_words(words):
 from ast import literal_eval
 
 def data_for_nodes(nodes: set):
-    data = pd.read_csv("data_small.csv", converters={"ingredient_words": literal_eval,"instruction_words": literal_eval})
+    data = pd.read_csv("data_small.csv", converters={"ingredient_words": literal_eval,"instruction_words": literal_eval, "title_words": literal_eval})
     data = data.rename(columns={"Unnamed: 0":"Id"})
     output = pd.DataFrame([rec for rec in nodes]).rename(columns={0: "Id"}).set_index('Id').join(data.set_index('Id'))
     return output
